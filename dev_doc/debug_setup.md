@@ -38,7 +38,13 @@ if __name__ == '__main__':
 ```
 
 ## 配置pycharm
+- start 选项见 gpustack/cmd/start.py
+```
+start --data-dir=debug_data_dir --port=9055 --debug
+```
 
 ![](./debug_config_pycharm.png)
 
-## 程序入口: gpustack/main.py
+# 关键代码
+- 程序入口: gpustack/main.py
+- server/server.py

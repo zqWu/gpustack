@@ -29,8 +29,14 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from gpustack.server.services import ModelUsageService
 from gpustack.api.types.openai_ext import CreateEmbeddingResponseExt
 
-
 logger = logging.getLogger(__name__)
+
+
+class RequestLogger(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        logger.debug(f"{response.status_code}: {request.method} {request.url}")
+        return response
 
 
 class RequestTimeMiddleware(BaseHTTPMiddleware):

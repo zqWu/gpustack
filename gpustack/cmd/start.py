@@ -345,7 +345,7 @@ def run(args: argparse.Namespace):
         multiprocessing.set_start_method('spawn')
 
         logger.info(f"GPUStack version: {__version__} ({__git_commit__})")
-
+        logger.info(f"{cfg}")
         if cfg.server_url:
             run_worker(cfg)
         else:
