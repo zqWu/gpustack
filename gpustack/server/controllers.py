@@ -193,6 +193,7 @@ async def sync_replicas(session: AsyncSession, model: Model, cfg: Config):
     """
     Synchronize the replicas.
     """
+    logger.debug("[debug] sync_replicas")
 
     if model.deleted_at is not None:
         return

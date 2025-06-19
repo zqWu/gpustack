@@ -48,3 +48,10 @@ start --data-dir=debug_data_dir --port=9055 --debug
 # 关键代码
 - 程序入口: gpustack/main.py
 - server/server.py
+
+
+## 手动安装 pip install vllm==0.9.1
+```bash
+conda activate gpustack
+pip install vllm==0.9.1
+```

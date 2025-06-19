@@ -151,6 +151,7 @@ class Worker:
         self._async_tasks.append(asyncio.create_task(coro))
 
     def start(self):
+        logger.debug(f"[debug] {self.__class__.__name__}.start")
         setup_logging(self._config.debug)
 
         if self._is_embedded:

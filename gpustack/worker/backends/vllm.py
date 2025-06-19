@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class VLLMServer(InferenceServer):
     def start(self):
+        logger.debug(f"[debug] {self.__class__.__name__}.start")
         try:
             command_path = get_command_path("vllm")
             if self._model.backend_version:
