@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 class Worker:
+    """对应一个节点, 如: 添加 worker"""
+
     def __init__(self, cfg: Config, is_embedded: bool = False):
         self._config = cfg
         self._is_embedded = is_embedded

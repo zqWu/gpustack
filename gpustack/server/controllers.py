@@ -31,7 +31,6 @@ from gpustack.server.services import (
     ModelService,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -57,7 +56,7 @@ class ModelController:
         """
         Reconcile the model.
         """
-
+        print(f"{self.__class__.__name__} _reconcile, event={event}")
         model: Model = event.data
         try:
             async with AsyncSession(self._engine) as session:
@@ -89,7 +88,7 @@ class ModelInstanceController:
         """
         Reconcile the model.
         """
-
+        print(f"{self.__class__.__name__}._reconcile, event={event}")
         model_instance: ModelInstance = event.data
         try:
             async with AsyncSession(self._engine) as session:
@@ -422,6 +421,7 @@ class WorkerController:
         """
         Delete instances base on the worker state and event type.
         """
+        print(f"{self.__class__.__name__}._reconcile, event={event}")
         worker: Worker = event.data
         if not worker:
             return
@@ -520,7 +520,7 @@ class ModelFileController:
         """
         Reconcile the model file.
         """
-
+        print(f"{self.__class__.__name__}._reconcile, event={event}")
         file: ModelFile = event.data
         try:
             async with AsyncSession(self._engine) as session:

@@ -88,7 +88,8 @@ class SystemLoadCollector:
             await asyncio.sleep(self.interval)
             try:
                 async with AsyncSession(self._engine) as session:
-                    workers = await Worker.all(session=session)
+                    # 从数据库中, 读取所有的 workers数据, 处理后 publish
+                    workers = await Worker.all(session=session)  # 扫表
                     system_load = compute_system_load(workers)
                     await SystemLoad.create(session, system_load)
             except Exception as e:

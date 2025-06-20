@@ -40,7 +40,14 @@ if __name__ == '__main__':
 ## 配置pycharm
 - start 选项见 gpustack/cmd/start.py
 ```
-start --data-dir=debug_data_dir --port=9055 --debug
+# 具体参数描述见 gpustack/cmd/start.py
+start
+--data-dir=debug_data_dir
+--port=9055
+--debug
+--disable-rpc-servers
+--database-url
+mysql://root:my-secret-ab@120.132.117.123:9043/gpustack
 ```
 
 ![](./debug_config_pycharm.png)
@@ -55,3 +62,23 @@ start --data-dir=debug_data_dir --port=9055 --debug
 conda activate gpustack
 pip install vllm==0.9.1
 ```
+
+# 问题与解决
+## rpc_server启动报错: libcudart.so.12: cannot open shared object file
+这个是子进程报错. 主进程中(运行于conda环境下), 能够正确的找到这些内容
+```text
+>>> import torch          
+>>> torch.cuda.is_available()
+True
+>>> torch.version.cuda
+'12.6'
+```
+找到当前环境的 .so
+```bash
+find $CONDA_PREFIX -name "libcudart.so.12" 2>/dev/null
+/data/project/wuzhongqin/.conda/envs/gpustack/lib/python3.10/site-packages/nvidia/cuda_runtime/lib/libcudart.so.12
+```
+配置到环境中去 ===> 无效，问题依旧
+见 rpc_server.py line83, 即使传递最原始的字符串也不行
+
+启动时关闭 rpc_server 

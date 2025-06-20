@@ -22,6 +22,10 @@ class Event:
         if isinstance(self.type, int):
             self.type = EventType(self.type)
 
+    def __repr__(self):
+        # return f"type={self.type}, data={self.data}"
+        return f"{self.type} {type(self.data)}"
+
 
 def event_decoder(obj):
     if "type" in obj:
@@ -45,6 +49,7 @@ class EventBus:
         self.subscribers: Dict[str, List[Subscriber]] = {}
 
     def subscribe(self, topic: str) -> Subscriber:
+        print(f"subscribe {topic}")
         subscriber = Subscriber()
         if topic not in self.subscribers:
             self.subscribers[topic] = []
@@ -58,6 +63,10 @@ class EventBus:
                 del self.subscribers[topic]
 
     async def publish(self, topic: str, event: Event):
+        # print(f"publish {event}")
+        known_topic = ["systemload", "worker"]
+        if topic not in known_topic:
+            print(f"publish {event}")
         if topic in self.subscribers:
             for subscriber in self.subscribers[topic]:
                 await subscriber.enqueue(copy.deepcopy(event))

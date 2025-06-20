@@ -14,6 +14,7 @@ class WorkerClient:
     def __init__(self, client: HTTPClient):
         self._client = client
         self._url = f"{client._base_url}/v1/workers"
+        print(f"WorkerClient base_url={client._base_url}")
 
     def list(self, params: Dict[str, Any] = None) -> WorkersPublic:
         response = self._client.get_httpx_client().get(self._url, params=params)

@@ -79,12 +79,16 @@ class RPCServer:
         env_name = get_env_name_by_vendor(vendor)
         env = os.environ.copy()
         env[env_name] = str(gpu_index)
+        # debug时 找不到 libcudart.so.12的解决办法
+        # env["LD_LIBRARY_PATH"] = f"{os.environ['CONDA_PREFIX']}/lib:" + env.get("LD_LIBRARY_PATH", "")
+        # 无效, 即使设置 env["LD_LIBRARY_PATH"] = "/绝对路径_无变量"
 
         try:
             logger.info("Starting llama-box rpc server")
             logger.debug(
                 f"Run llama-box: {command_path} rpc server with arguments: {' '.join(arguments)}"
             )
+
             subprocess.run(
                 [command_path] + arguments,
                 stdout=sys.stdout,
