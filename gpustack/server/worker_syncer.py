@@ -56,6 +56,7 @@ class WorkerSyncer:
                     state_to_worker_name[worker.state].append(worker.name)
 
             for worker in should_update_workers:
+                print(f"update worker {worker.name}")
                 await WorkerService(session).update(worker)
 
             for state, worker_names in state_to_worker_name.items():

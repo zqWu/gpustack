@@ -53,6 +53,7 @@ class ModelFileClient:
         stop_condition: Optional[Callable[[Event], bool]] = None,
         params: Optional[Dict[str, Any]] = None,
     ):
+        print(f"{self.__class__.__name__} awatch")
         if params is None:
             params = {}
         params["watch"] = "true"
