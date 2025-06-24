@@ -64,7 +64,7 @@ class VLLMServer(InferenceServer):
             arguments.extend(built_in_arguments)
 
             logger.info("Starting vllm server")
-            logger.debug(f"Run vllm with arguments: {' '.join(arguments)}")
+            logger.info(f"Run vllm with arguments: {' '.join(arguments)}")
             if self._model.env:
                 logger.debug(
                     f"Model environment variables: {', '.join(f'{key}={value}' for key, value in self._model.env.items())}"
