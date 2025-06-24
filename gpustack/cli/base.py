@@ -123,6 +123,7 @@ class BaseCLIClient(ABC):
         return model_name, repo_id, f"*{filename}*"
 
     def ensure_model(self):
+        print(f"{__file__} {self.__class__.__name__}.ensure_model")
         models = self._clientset.models.list()
         for model in models.items:
             if model.name == self._model_name:
@@ -138,6 +139,7 @@ class BaseCLIClient(ABC):
         self._wait_for_model_ready()
 
     def _wait_for_model_ready(self):
+        print(f"{__file__} {self.__class__.__name__}._wait_for_model_ready")
         if self._model_is_running():
             return
 
@@ -188,6 +190,7 @@ class BaseCLIClient(ABC):
                 rate_thread.join()
 
     def _model_is_running(self):
+        print(f"{__file__} {self.__class__.__name__}._model_is_running")
         instances = self._clientset.model_instances.list(
             params={"model_id": self._model.id},
         )
@@ -201,6 +204,8 @@ class BaseCLIClient(ABC):
         return False
 
     def _stop_when_running(self, event: Event) -> bool:
+        print(f"{__file__} {self.__class__.__name__}._stop_when_running")
+
         if (
             event.data["model_id"] == self._model.id
             and event.data["state"] == ModelInstanceStateEnum.RUNNING

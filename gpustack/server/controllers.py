@@ -46,7 +46,9 @@ class ModelController:
         Start the controller.
         """
 
-        async for event in Model.subscribe(self._engine):
+        async for event in Model.subscribe(
+            self._engine, whoami=self.__class__.__name__
+        ):
             if event.type == EventType.HEARTBEAT:
                 continue
 
@@ -56,7 +58,7 @@ class ModelController:
         """
         Reconcile the model.
         """
-        print(f"{self.__class__.__name__} _reconcile, event={event}")
+        print(f"{__file__} {self.__class__.__name__} _reconcile, event={event}")
         model: Model = event.data
         try:
             async with AsyncSession(self._engine) as session:
@@ -78,7 +80,9 @@ class ModelInstanceController:
         Start the controller.
         """
 
-        async for event in ModelInstance.subscribe(self._engine):
+        async for event in ModelInstance.subscribe(
+            self._engine, whoami=self.__class__.__name__
+        ):
             if event.type == EventType.HEARTBEAT:
                 continue
 
@@ -88,7 +92,7 @@ class ModelInstanceController:
         """
         Reconcile the model.
         """
-        print(f"{self.__class__.__name__}._reconcile, event={event}")
+        print(f"{__file__} {self.__class__.__name__}._reconcile, event={event}")
         model_instance: ModelInstance = event.data
         try:
             async with AsyncSession(self._engine) as session:
@@ -174,6 +178,10 @@ class ModelInstanceController:
 
 
 async def set_default_worker_selector(session: AsyncSession, model: Model):
+    """
+    当 model发生变化时, 需要设置 model.worker_selector
+    指定: 哪些worker 能够运行本model
+    """
     if model.deleted_at is not None:
         return
 
@@ -191,10 +199,13 @@ async def set_default_worker_selector(session: AsyncSession, model: Model):
 async def sync_replicas(session: AsyncSession, model: Model, cfg: Config):
     """
     Synchronize the replicas.
+    model发生了变更, 对 modelinstance也需要进行同步
+    model.replica 与 modelinstance的数量 sync
     """
     logger.debug("[debug] sync_replicas")
 
     if model.deleted_at is not None:
+        """已deleted 的model, 无需 sync replica"""
         return
 
     instances = await ModelInstance.all_by_field(session, "model_id", model.id)
@@ -410,7 +421,9 @@ class WorkerController:
         Start the controller.
         """
 
-        async for event in Worker.subscribe(self._engine):
+        async for event in Worker.subscribe(
+            self._engine, whoami=self.__class__.__name__
+        ):
             if event.type in (EventType.UPDATED, EventType.DELETED):
                 try:
                     await self._reconcile(event)
@@ -421,7 +434,7 @@ class WorkerController:
         """
         Delete instances base on the worker state and event type.
         """
-        print(f"{self.__class__.__name__}._reconcile, event={event}")
+        print(f"{__file__} {self.__class__.__name__}._reconcile, event={event}")
         worker: Worker = event.data
         if not worker:
             return
@@ -512,7 +525,9 @@ class ModelFileController:
         Start the controller.
         """
 
-        async for event in ModelFile.subscribe(self._engine):
+        async for event in ModelFile.subscribe(
+            self._engine, whoami=self.__class__.__name__
+        ):
             if event.type == EventType.CREATED or event.type == EventType.UPDATED:
                 await self._reconcile(event)
 
@@ -520,7 +535,7 @@ class ModelFileController:
         """
         Reconcile the model file.
         """
-        print(f"{self.__class__.__name__}._reconcile, event={event}")
+        print(f"{__file__} {self.__class__.__name__}._reconcile, event={event}")
         file: ModelFile = event.data
         try:
             async with AsyncSession(self._engine) as session:

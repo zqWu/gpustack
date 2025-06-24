@@ -118,6 +118,7 @@ class ServeManager:
             self._start_serve_process(mi)
 
     def _start_serve_process(self, mi: ModelInstance):
+        print(f"{self.__class__.__name__}._start_serve_process")
         log_file_path = f"{self._serve_log_dir}/{mi.id}.log"
         if os.path.exists(log_file_path) and platform.system() != "windows":
             # TODO Windows does not support os.remove() on open files.
@@ -227,6 +228,7 @@ class ServeManager:
         return model
 
     def _stop_model_instance(self, mi: ModelInstance):
+        print(f"{self.__class__.__name__}._stop_model_instance")
         id = mi.id
         if id not in self._serving_model_instances:
             logger.warning(f"Model instance {mi.name} is not running. Skipping.")
@@ -249,7 +251,6 @@ class ServeManager:
                 f"Model instance {mi.name} is already running, skipping restart."
             )
             return
-
         restart_count = mi.restart_count or 0
         last_restart_time = mi.last_restart_time or mi.updated_at
 

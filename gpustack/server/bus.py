@@ -34,6 +34,8 @@ def event_decoder(obj):
 
 
 class Subscriber:
+    """这个叫 Subscriber不合适, 应该是 TopicEventQueue"""
+
     def __init__(self):
         self.queue = asyncio.Queue()
 

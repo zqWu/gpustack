@@ -109,7 +109,9 @@ class Scheduler:
         logger.info("Scheduler started.")
 
         # scheduler job trigger by event.
-        async for event in ModelInstance.subscribe(self._engine):
+        async for event in ModelInstance.subscribe(
+            self._engine, whoami=self.__class__.__name__
+        ):
             if event.type != EventType.CREATED:
                 continue
 
@@ -119,6 +121,8 @@ class Scheduler:
         """
         Get the pending model instances.
         """
+        print(f"{__file__} {self.__class__.__name__}._enqueue_pending_instances")
+
         try:
             async with AsyncSession(self._engine) as session:
                 instances = await ModelInstance.all(session)

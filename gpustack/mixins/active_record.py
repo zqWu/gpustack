@@ -343,7 +343,7 @@ class ActiveRecordMixin:
     @classmethod
     async def _publish_event(cls, event_type: str, data: Any):
         try:
-            print(f"数据库操作后, {cls.__name__} public event {event_type}")
+            print(f"{__file__} 数据库操作后, publish {cls.__name__}::{event_type}")
             await event_bus.publish(
                 cls.__name__.lower(), Event(type=event_type, data=data)
             )
@@ -364,25 +364,25 @@ class ActiveRecordMixin:
 
     @classmethod
     async def subscribe(
-        cls, session_or_engine: Union[AsyncSession, AsyncEngine]
+        cls, session_or_engine: Union[AsyncSession, AsyncEngine], whoami: str = None
     ) -> AsyncGenerator[Event, None]:
         if isinstance(session_or_engine, AsyncSession):
             items = await cls.all(session_or_engine)
-            print(f"启动后扫表 {cls.__name__}, 发布event create")
+            print(f"{__file__} 扫表 {cls.__name__}, 发布event create")
             for item in items:
                 yield Event(type=EventType.CREATED, data=item)
             await session_or_engine.close()
         elif isinstance(session_or_engine, AsyncEngine):
             async with AsyncSession(session_or_engine) as session:
                 items = await cls.all(session)
-                print(f"启动后扫表 {cls.__name__}, 发布event create")
+                print(f"{__file__} 扫表 {cls.__name__}, 发布event create")
                 for item in items:
                     yield Event(type=EventType.CREATED, data=item)
         else:
             raise ValueError("Invalid session or engine.")
 
         subscriber = event_bus.subscribe(cls.__name__.lower())
-        heartbeat_interval = timedelta(seconds=15)
+        heartbeat_interval = timedelta(seconds=15 * 1000)
         last_event_time = datetime.now(timezone.utc)
 
         try:
@@ -391,7 +391,7 @@ class ActiveRecordMixin:
                     event = await asyncio.wait_for(
                         subscriber.receive(), timeout=heartbeat_interval.total_seconds()
                     )
-                    print(f"收到事件 {cls.__name__}, {event}")
+                    print(f"{__file__} {whoami} 收到事件 {cls.__name__}, {event}")
                     yield event
                 except asyncio.TimeoutError:
                     if (
@@ -412,7 +412,7 @@ class ActiveRecordMixin:
         filter_func: Optional[Callable[[Any], bool]] = None,
     ) -> AsyncGenerator[str, None]:
         """Stream events matching the given criteria as JSON strings."""
-        async for event in cls.subscribe(session):
+        async for event in cls.subscribe(session, whoami=cls.__name__):
             if event.type == EventType.HEARTBEAT:
                 yield "\n\n"
                 continue

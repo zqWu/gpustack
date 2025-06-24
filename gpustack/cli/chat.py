@@ -69,6 +69,8 @@ class ChatCLIClient(BaseCLIClient):
                 print_error(e)
 
     def create_model(self):
+        print(f"{__file__} {self.__class__.__name__}.create_model")
+
         data = (
             self._clientset.http_client.get_httpx_client()
             .get(f"{self._clientset.base_url}/v1/model-sets")
