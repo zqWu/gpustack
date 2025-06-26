@@ -18,6 +18,7 @@ from gpustack.server.controllers import (
     ModelFileController,
     ModelInstanceController,
     WorkerController,
+    DockerCmdController,
 )
 from gpustack.server.db import get_engine, init_db
 from gpustack.scheduler.scheduler import Scheduler
@@ -166,6 +167,8 @@ class Server:
         model_file_controller = ModelFileController()
         self._create_async_task(model_file_controller.start())
 
+        docker_cmd_controller = DockerCmdController(self._config)
+        self._create_async_task(docker_cmd_controller.start())
         logger.debug("Controllers started.")
 
     def _start_system_load_collector(self):

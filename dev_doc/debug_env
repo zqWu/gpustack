@@ -1,0 +1,4 @@
+CUDA_VISIBLE_DEVICES=0
+
+# 是否开启 sql 日志 true|false
+GPUSTACK_DB_ECHO=false

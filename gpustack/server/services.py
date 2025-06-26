@@ -8,6 +8,7 @@ from sqlmodel import SQLModel, bindparam, cast, col
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.dialects.postgresql import JSONB
 
+from gpustack.schemas import DockerCmd
 from gpustack.schemas.api_keys import ApiKey
 from gpustack.schemas.model_files import ModelFile
 from gpustack.schemas.model_usage import ModelUsage
@@ -327,3 +328,28 @@ class ModelFileService:
 
     async def create(self, model_file: ModelFile):
         return await ModelFile.create(self.session, model_file)
+
+
+class DockerCmdService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    @locked_cached(ttl=60)
+    async def get_by_id(self, docker_cmd_id: int) -> Optional[DockerCmd]:
+        result = await DockerCmd.one_by_id(self.session, docker_cmd_id)
+        if result is None:
+            return None
+        self.session.expunge(result)
+        return result
+
+    async def update(
+        self, docker_cmd: DockerCmd, source: Union[dict, SQLModel, None] = None
+    ):
+        result = await docker_cmd.update(self.session, source)
+        await delete_cache_by_key(self.get_by_id, docker_cmd.id)
+        return result
+
+    async def delete(self, docker_cmd: DockerCmd):
+        result = await docker_cmd.delete(self.session)
+        await delete_cache_by_key(self.get_by_id, docker_cmd.id)
+        return result

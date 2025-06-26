@@ -8,14 +8,16 @@ import os
 from typing import Dict, Optional
 import logging
 
-
 from gpustack.api.exceptions import NotFoundException
 from gpustack.config.config import Config
 from gpustack.logging import (
     RedirectStdoutStderr,
 )
+from gpustack.schemas import DockerCmd
+from gpustack.schemas.docker_cmd import DockerCmdState
 from gpustack.utils import network, platform
 from gpustack.utils.process import terminate_process_tree, add_signal_handlers
+from gpustack.worker.backends.docker_cmd import DockerBackend
 from gpustack.worker.backends.llama_box import LlamaBoxServer
 from gpustack.worker.backends.vox_box import VoxBoxServer
 from gpustack.worker.backends.vllm import VLLMServer
@@ -30,7 +32,6 @@ from gpustack.schemas.models import (
     get_backend,
 )
 from gpustack.server.bus import Event, EventType
-
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +53,45 @@ class ServeManager:
         self._model_cache_by_instance: Dict[int, Model] = {}
         self._clientset = clientset
         self._cache_dir = cfg.cache_dir
+        self._docker_containers = []
 
         os.makedirs(self._serve_log_dir, exist_ok=True)
+
+    async def watch_docker_cmd(self):
+        while True:
+            try:
+                logger.info("Started watching docker_cmd.")
+                await self._clientset.docker_cmds.awatch(
+                    callback=self._handle_docker_cmd_event
+                )
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Failed watching docker_cmd: {e}")
+                await asyncio.sleep(5)
+
+    def _handle_docker_cmd_event(self, event: Event):
+        print(f"{self.__class__.__name__} _handle_docker_cmd_event {event}")
+        dc = DockerCmd.model_validate(event.data)
+        if not dc:
+            return
+
+        if dc.worker_id != self._worker_id:
+            return  # 不在本worker运行
+        if dc.state == DockerCmdState.RUNNING:
+            return
+
+        if dc.state == DockerCmdState.SCHEDULED:
+            print(f"{self.__class__.__name__} 启动 backend: docker_cmd = {dc}")
+            docker_backend = DockerBackend(self._clientset, dc, self._config)
+            ex, container_name = docker_backend.start()
+            if not ex:
+                self._docker_containers.append(container_name)
+            else:
+                # 如果启动容器出错, 该如何处理
+                raise NotImplementedError
+        else:
+            raise NotImplementedError
 
     async def watch_model_instances(self):
         while True:

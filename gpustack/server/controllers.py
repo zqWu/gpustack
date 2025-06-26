@@ -1,7 +1,7 @@
 import logging
 import random
 import string
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import httpx
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
@@ -11,6 +11,7 @@ from gpustack.policies.scorers.offload_layer_scorer import OffloadLayerScorer
 from gpustack.policies.scorers.placement_scorer import PlacementScorer, ScaleTypeEnum
 from gpustack.policies.base import ModelInstanceScore
 from gpustack.policies.scorers.status_scorer import StatusScorer
+from gpustack.schemas.docker_cmd import DockerCmd, DockerCmdState
 from gpustack.schemas.model_files import ModelFile, ModelFileStateEnum
 from gpustack.schemas.models import (
     BackendEnum,
@@ -29,10 +30,62 @@ from gpustack.server.services import (
     ModelFileService,
     ModelInstanceService,
     ModelService,
+    DockerCmdService,
 )
 
 
 logger = logging.getLogger(__name__)
+
+
+class DockerCmdController:
+    def __init__(self, cfg: Config):
+        self._engine = get_engine()
+        self._config = cfg
+
+    async def start(self):
+        async for event in DockerCmd.subscribe(self._engine):
+            # 这里其实有一些问题, 如果一开始节点 NotReady, 那么就不会调动成功
+            # 因此需要 处理 Worker + DockerCmd 2种事件
+            if event.type == EventType.HEARTBEAT:
+                continue
+
+            await self._reconcile(event)
+
+    async def _find_worker(self, docker_cmd: DockerCmd) -> Optional[Worker]:
+        # 这里简化调动流程, 直接调度到第一个 worker
+        async with AsyncSession(self._engine) as session:
+            workers: List[Worker] = await Worker.all(session)
+            for w in workers:
+                if w.state == WorkerStateEnum.READY:
+                    return w
+            return None
+
+    async def _reconcile(self, event):
+        msg: DockerCmd = event.data
+        try:
+            async with AsyncSession(self._engine) as session:
+                docker_cmd = await DockerCmd.one_by_id(session, msg.id)
+
+            if not docker_cmd:
+                return
+
+            if docker_cmd.state != DockerCmdState.PENDING:
+                return
+
+            worker: Optional[Worker] = await self._find_worker(docker_cmd)
+            if not worker:
+                print(f"无节点可调度 docker_cmd={docker_cmd.id}")
+                return
+
+            print(f"{self.__class__.__name__} 调度到 worker={worker.id}")
+            docker_cmd.state = DockerCmdState.SCHEDULED
+            docker_cmd.worker_id = worker.id
+
+            await DockerCmdService(session).update(
+                docker_cmd
+            )  # 这种方式进行 update, 会 publish
+        except Exception as e:
+            logger.error(f"Failed to reconcile docker_cmd {docker_cmd.id}: {e}")
 
 
 class ModelController:

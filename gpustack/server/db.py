@@ -15,6 +15,7 @@ from gpustack.schemas.models import Model, ModelInstance
 from gpustack.schemas.system_load import SystemLoad
 from gpustack.schemas.users import User
 from gpustack.schemas.workers import Worker
+from gpustack.schemas.docker_cmd import DockerCmd
 from gpustack.schemas.stmt import (
     worker_after_create_view_stmt_sqlite,
     worker_after_drop_view_stmt_sqlite,
@@ -86,6 +87,7 @@ async def create_db_and_tables(engine: AsyncEngine):
                 SystemLoad.__table__,
                 User.__table__,
                 Worker.__table__,
+                DockerCmd.__table__,
             ],
         )
 

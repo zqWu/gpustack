@@ -35,6 +35,13 @@ from gpustack.schemas.workers import (
     CPUInfo,
     MemoryInfo,
 )
+from gpustack.schemas.docker_cmd import (
+    DockerCmd,
+    DockerCmdCreate,
+    DockerCmdPublic,
+    DockerCmdsPublic,
+    DockerCmdUpdate,
+)
 from gpustack.schemas.users import User, UserCreate, UserUpdate, UserPublic, UsersPublic
 from gpustack.schemas.api_keys import ApiKey, ApiKeyCreate, ApiKeyPublic, ApiKeysPublic
 from gpustack.schemas.system_load import SystemLoad
@@ -85,4 +92,9 @@ __all__ = [
     "ModelFileUpdate",
     "ModelFilePublic",
     "ModelFilesPublic",
+    "DockerCmd",
+    "DockerCmdCreate",
+    "DockerCmdPublic",
+    "DockerCmdsPublic",
+    "DockerCmdUpdate",
 ]

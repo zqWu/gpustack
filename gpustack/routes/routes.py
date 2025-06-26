@@ -18,6 +18,7 @@ from gpustack.routes import (
     openai,
     voice,
     workers,
+    docker_cmd,
 )
 
 from gpustack.api.exceptions import error_responses, openai_api_error_responses
@@ -108,4 +109,10 @@ api_router.include_router(
     prefix="/proxy",
     tags=["Server-Side Proxy"],
     include_in_schema=False,
+)
+api_router.include_router(
+    docker_cmd.router,
+    # dependencies=[Depends(get_current_user)], # 这里忽略了用户验证
+    prefix="/v1/docker-cmds",
+    tags=["docker_cmd"],
 )
