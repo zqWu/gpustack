@@ -67,6 +67,9 @@ def compute_avg_gpu_utilization_rate(workers: list[Worker]) -> Tuple[float, floa
 
 
 def compute_system_load(workers: list[Worker]) -> SystemLoad:
+    """
+    这里负载是平均值, 所以没有了 worker.id等信息
+    """
     cpu, ram = compute_avg_cpu_memory_utilization_rate(workers)
     gpu, vram = compute_avg_gpu_utilization_rate(workers)
 

@@ -19,6 +19,10 @@ class ClientSet:
         password: Optional[str] = None,
         headers: Optional[dict] = None,
     ):
+        """
+        目前来看 ClientSet 主要是 worker想 server进行请求数据
+        """
+        print(f"{self.__class__.__name__} base_url={base_url}")
         if headers is None:
             headers = {}
 

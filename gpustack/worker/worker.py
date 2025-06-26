@@ -136,9 +136,13 @@ class Worker:
         ),
     )
     def _get_current_worker_id(self):
+        """
+        1. 向server进行注册
+        2. 从server上 查询所有 worker, 自己应该在其中
+        """
         self._worker_manager.register_with_server()
         # Worker ID is available after the worker registration.
-        workers = self._clientset.workers.list()
+        workers = self._clientset.workers.list()  # 向server
 
         if workers and workers.items:
             for worker in workers.items:

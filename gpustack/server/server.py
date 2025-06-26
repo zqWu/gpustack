@@ -28,7 +28,6 @@ from gpustack.server.usage_buffer import flush_usage_to_db
 from gpustack.server.worker_syncer import WorkerSyncer
 from gpustack.utils.process import add_signal_handlers_in_loop
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -61,14 +60,14 @@ class Server:
 
         init_model_catalog(self._config.model_catalog_file)
 
-        self._start_sub_processes()
-        self._start_scheduler()
-        self._start_controllers()
-        self._start_system_load_collector()
-        self._start_worker_syncer()
-        self._start_update_checker()
-        self._start_model_usage_flusher()
-        self._start_ray()
+        self._start_sub_processes()  # 启动 Worker【进程】
+        self._start_scheduler()  # Scheduler 过滤出 pending model instance, 调动 pending mi
+        self._start_controllers()  # 监听事件+处理
+        self._start_system_load_collector()  # 定时获取系统负载 = avg(all_workers)
+        self._start_worker_syncer()  # 看看 f"http://{worker.ip}:{worker.port}/healthz"
+        self._start_update_checker()  # 新版本通知 https://update-service.gpustack.ai
+        self._start_model_usage_flusher()  # 模型access记录入库, 见 数据库表=model_usage
+        self._start_ray()  # 根据配置, 是否启动一个 ray集群
 
         port = 80
         if self._config.port:
