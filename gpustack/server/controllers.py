@@ -66,24 +66,23 @@ class DockerCmdController:
             async with AsyncSession(self._engine) as session:
                 docker_cmd = await DockerCmd.one_by_id(session, msg.id)
 
-            if not docker_cmd:
-                return
+                if not docker_cmd:
+                    return
 
-            if docker_cmd.state != DockerCmdState.PENDING:
-                return
+                if docker_cmd.state != DockerCmdState.PENDING:
+                    return
 
-            worker: Optional[Worker] = await self._find_worker(docker_cmd)
-            if not worker:
-                print(f"无节点可调度 docker_cmd={docker_cmd.id}")
-                return
+                worker: Optional[Worker] = await self._find_worker(docker_cmd)
+                if not worker:
+                    print(f"无节点可调度 docker_cmd={docker_cmd.id}")
+                    return
 
-            print(f"{self.__class__.__name__} 调度到 worker={worker.id}")
-            docker_cmd.state = DockerCmdState.SCHEDULED
-            docker_cmd.worker_id = worker.id
+                print(f"{self.__class__.__name__} 调度到 worker={worker.id}")
+                docker_cmd.state = DockerCmdState.SCHEDULED
+                docker_cmd.worker_id = worker.id
 
-            await DockerCmdService(session).update(
-                docker_cmd
-            )  # 这种方式进行 update, 会 publish
+                # 这种方式进行 update, 会 publish
+                await DockerCmdService(session).update(docker_cmd)
         except Exception as e:
             logger.error(f"Failed to reconcile docker_cmd {docker_cmd.id}: {e}")
 
