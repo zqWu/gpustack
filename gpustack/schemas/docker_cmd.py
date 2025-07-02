@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 from sqlalchemy.orm import declarative_base
@@ -12,19 +13,14 @@ Base = declarative_base()
 
 
 class DockerCmdState(str, Enum):
-    # INITIALIZING = "initializing"
     PENDING = "pending"
-    # STARTING = "starting"
+    STARTING = "starting"
     RUNNING = "running"
     SCHEDULED = "scheduled"
-    # ERROR = "error"
-    # DOWNLOADING = "downloading"
-    # ANALYZING = "analyzing"
-    # UNREACHABLE = "unreachable"
+    ERROR = "error"
 
 
-class DockerCmdBase(SQLModel, ActiveRecordMixin):
-    id: Optional[int] = Field(default=None, primary_key=True)
+class DockerCmdBase(SQLModel):
     image: str
     port_map: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     entrypoint: Optional[str] = Field(
@@ -32,12 +28,11 @@ class DockerCmdBase(SQLModel, ActiveRecordMixin):
     )
     cmd: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     env: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
-    # replicas: int = Field(default=1, ge=0)
-    # ready_replicas: int = Field(default=0, ge=0)
 
 
-class DockerCmd(DockerCmdBase, TimestampsMixin, table=True):
+class DockerCmd(DockerCmdBase, ActiveRecordMixin, TimestampsMixin, table=True):
     __tablename__ = 'docker_cmds'
+    id: Optional[int] = Field(default=None, primary_key=True)
     worker_id: Optional[int] = Field(default=None)
     state: DockerCmdState = Field(default=DockerCmdState.PENDING)
 
@@ -46,12 +41,17 @@ class DockerCmdCreate(DockerCmdBase):
     pass
 
 
-class DockerCmdUpdate(DockerCmd):
-    pass
+class DockerCmdUpdate(DockerCmdBase):
+    state: Optional[DockerCmdState]
+    worker_id: Optional[int]
 
 
-class DockerCmdPublic(DockerCmd):
-    pass
+class DockerCmdPublic(DockerCmdBase):
+    id: int
+    state: DockerCmdState
+    worker_id: Optional[int]
+    created_at: datetime
+    created_at: datetime
 
 
 DockerCmdsPublic = PaginatedList[DockerCmdPublic]

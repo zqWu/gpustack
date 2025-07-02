@@ -10,7 +10,6 @@ import threading
 
 from gpustack.client.generated_clientset import ClientSet
 from gpustack.config.config import Config
-from gpustack.schemas.docker_cmd import DockerCmdState
 
 logger = logging.getLogger(__name__)
 lock = threading.Lock()
@@ -30,9 +29,6 @@ class DockerBackend:
 
     def start(self):
         ex = start_docker(self._docker_cmd, self._container_name)
-        if not ex:
-            self._docker_cmd.state = DockerCmdState.RUNNING
-            self._clientset.docker_cmds.update(self._docker_cmd.id, self._docker_cmd)
         return ex, self._container_name
 
     def is_alive(self):

@@ -71,27 +71,31 @@ class ServeManager:
                 await asyncio.sleep(5)
 
     def _handle_docker_cmd_event(self, event: Event):
-        print(f"{self.__class__.__name__} _handle_docker_cmd_event {event}")
+        # 需要一个锁, 防止多次启动
         dc = DockerCmd.model_validate(event.data)
-        if not dc:
-            return
+        print(f"{self.__class__.__name__} _handle_docker_cmd_event {event}")
 
         if dc.worker_id != self._worker_id:
+            print(f"不在本节点运行, {dc.worker_id} != {self._worker_id}")
             return  # 不在本worker运行
-        if dc.state == DockerCmdState.RUNNING:
+        if dc.state != DockerCmdState.SCHEDULED:
+            print(f"dc.state={dc.state}, 不执行, 需要等待到 SCHEDULED")
             return
 
-        if dc.state == DockerCmdState.SCHEDULED:
-            print(f"{self.__class__.__name__} 启动 backend: docker_cmd = {dc}")
-            docker_backend = DockerBackend(self._clientset, dc, self._config)
-            ex, container_name = docker_backend.start()
-            if not ex:
-                self._docker_containers.append(container_name)
-            else:
-                # 如果启动容器出错, 该如何处理
-                raise NotImplementedError
+        print(f"{self.__class__.__name__} 启动 backend: docker_cmd = {dc}")
+        docker_backend = DockerBackend(self._clientset, dc, self._config)
+        ex, container_name = docker_backend.start()
+        if not ex:
+            print("更新 docker_cmd状态=RUNNING")
+            dc.state = DockerCmdState.RUNNING
+            self._clientset.docker_cmds.update(dc.id, dc)
+            self._docker_containers.append(container_name)
         else:
-            raise NotImplementedError
+            # 如果启动容器出错, 该如何处理, 日志?
+            print("启动容器出错, 更新 docker_cmd状态=ERROR")
+            dc.state = DockerCmdState.ERROR
+            self._clientset.docker_cmds.update(dc.id, dc)
+            self._docker_containers.append(container_name)
 
     async def watch_model_instances(self):
         while True:

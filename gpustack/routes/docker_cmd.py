@@ -18,7 +18,7 @@ from gpustack.server.services import DockerCmdService
 router = APIRouter()
 
 
-@router.post("", response_model=DockerCmd)
+@router.post("", response_model=DockerCmdPublic)
 async def create_docker_cmd(session: SessionDep, docker_cmd_in: DockerCmdCreate):
     try:
         docker_cmd = await DockerCmd.create(session, docker_cmd_in)
