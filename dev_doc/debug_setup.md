@@ -47,7 +47,7 @@ start
 --debug
 --disable-rpc-servers
 --database-url
-mysql://root:my-secret-ab@120.132.117.123:9043/gpustack
+mysql://user:passwd@ip:port/gpustack
 ```
 
 ![](./debug_config_pycharm.png)
